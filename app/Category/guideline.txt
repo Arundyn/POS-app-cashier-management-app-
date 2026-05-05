@@ -1,0 +1,206 @@
+---------------------------------------
+EXAM REQUIREMENTS CHECKLIST:
+---------------------------------------
+[done] Login/logout - all pages protected by auth
+[done] After login → Dashboard
+[done] CRUD Kategori + validation (required, unique)
+[done] CRUD Item + validation (required, min, numeric)
+[done] Every action shows success/error alert
+[ ] Cart blocks add when stock insufficient
+[ ] Auto calculate subtotal & total
+[ ] After checkout: cart cleared, stock deducted
+[ ] After checkout: struk shown + accessible via History
+[ ] Struk shows kasir/user name
+---------------------------------------
+EXAM REQUIREMENTS FEATURES:
+---------------------------------------
+1. login 
+2. dashboard -> statistic category, item, transaction 
+3. master category -> add, change, delete  
+4. master item -> add, change, delete 
+5. transaction process, keranjang, history 
+6. keranjang 
+
+note: jika barang kurang dari 5, maka warna akan merah 
+php artisan migrate:fresh --seed
+
+
+
+
+file in controller should have:
+/app
+    /controller
+        CategoryController.php
+        Controller.php
+        DashboardController.php
+        ItemController.php
+        ProfileController.php
+        TransactionController.php
+
+file in model should have:
+/app
+    /models
+        Category.php
+        Item.php
+        Transaction.php
+        TransactionItem.php
+        User.php
+
+file in views:
+/resource
+    /views
+        /categories
+            index.blade.php
+        /items
+            index.blade.php
+        /layouts
+            app.blade.php
+            guest.blade.php
+            navigation.blade.php
+        /transaction
+            index.blade.php
+            pos.blade.php
+            show.blade.php
+        dashboard.blade.php
+        welcome.blade.php
+
+
+step to do on D-day:
+# 1. Extract your project into C:\laragon\www\pos-app
+
+# 2. Open terminal in that folder and run:
+composer install
+npm install
+npm run build
+
+# 3. Create the database in Laragon's phpMyAdmin
+# (same steps as before, just at localhost/phpmyadmin)
+
+# 4. Copy .env.example to .env and configure it
+cp .env.example .env
+php artisan key:generate
+
+# 5. Set DB credentials in .env
+DB_DATABASE=pos_app
+DB_USERNAME=root
+DB_PASSWORD=
+
+# 6. Run migrations and seed
+php artisan migrate --seed
+
+
+
+
+=======================================
+POS APP - EXAM DAY CHEAT SHEET
+=======================================
+
+SETUP (15 min):
+1. Copy project to C:\laragon\www\pos-app
+2. composer install
+3. npm install && npm run build
+4. Create DB "pos_app" in phpMyAdmin
+5. Copy .env.example to .env
+6. Set DB_DATABASE=pos_app, DB_USERNAME=root, DB_PASSWORD=
+7. php artisan key:generate
+8. php artisan migrate --seed
+9. php artisan serve
+10. Login: admin@test.com / password
+
+---------------------------------------
+IF STARTING FROM SCRATCH (no injection):
+---------------------------------------
+
+PHASE 0 - Setup (30min):
+> composer create-project laravel/laravel pos-app
+> cd pos-app
+> composer require laravel/breeze --dev
+> php artisan breeze:install blade
+> npm install && npm run build
+> set DB in .env → php artisan migrate
+
+PHASE 1 - Models & Migrations (30min):
+> php artisan make:model Category -m
+> php artisan make:model Item -m
+> php artisan make:model Transaction -m
+> php artisan make:model TransactionItem -m
+- categories: id, name(unique), timestamps
+- items: id, category_id(fk), name, price(decimal), stock(int), timestamps
+- transactions: id, user_id(fk), total(decimal), timestamps
+- transaction_items: id, transaction_id(fk), item_id(fk), qty, price, timestamps
+> php artisan migrate
+
+PHASE 2 - Routes (10min):
+> Add all routes in routes/web.php wrapped in auth middleware
+> php artisan make:controller DashboardController
+> php artisan make:controller CategoryController --resource
+> php artisan make:controller ItemController --resource
+> php artisan make:controller TransactionController
+
+PHASE 3 - Models fillable (5min):
+Category:    fillable = ['name']
+Item:        fillable = ['category_id','name','price','stock']
+Transaction: fillable = ['user_id','total']
+             relations: user(), items()
+TransactionItem: fillable = ['transaction_id','item_id','qty','price']
+                 relations: item()
+
+PHASE 4 - Nav links (5min):
+> Add to navigation.blade.php (desktop + mobile both)
+> Add @stack('scripts') before </body> in app.blade.php
+> Add @stack('styles') inside <head> in app.blade.php
+> Add flash messages in app.blade.php before {{ $slot }}
+
+PHASE 5 - Dashboard (20min):
+> DashboardController: count categories, items, transactions, sum total
+> dashboard.blade.php: 4 stat cards
+
+PHASE 6 - Category CRUD (30min):
+> CategoryController: index, store, update, destroy
+> categories/index.blade.php: table + Alpine modal add/edit
+
+PHASE 7 - Item CRUD (30min):
+> ItemController: index, store, update, destroy
+> items/index.blade.php: table + Alpine modal + stock badge
+
+PHASE 8 - POS Page (90min):
+> TransactionController: pos()
+> transactions/pos.blade.php: product grid + Alpine cart
+> KEY: addToCart checks stock, incQty checks stock
+> prepareCheckout puts cart JSON into hidden input
+
+PHASE 9 - Checkout (45min):
+> TransactionController: store()
+> Validate stock server-side first
+> DB::transaction() wraps everything
+> Deduct stock with $item->decrement()
+> Redirect to show() after success
+> transactions/show.blade.php: struk with kasir name
+
+PHASE 10 - History (20min):
+> TransactionController: index(), show()
+> transactions/index.blade.php: list with Lihat Struk button
+
+---------------------------------------
+EXAM REQUIREMENTS CHECKLIST:
+---------------------------------------
+[ ] Login/logout - all pages protected by auth
+[ ] After login → Dashboard
+[ ] CRUD Kategori + validation (required, unique)
+[ ] CRUD Item + validation (required, min, numeric)
+[ ] Every action shows success/error alert
+[ ] Cart blocks add when stock insufficient
+[ ] Auto calculate subtotal & total
+[ ] After checkout: cart cleared, stock deducted
+[ ] After checkout: struk shown + accessible via History
+[ ] Struk shows kasir/user name
+
+---------------------------------------
+COMMON ERRORS & FIXES:
+---------------------------------------
+MassAssignmentException → add $fillable to model
+Class not found → check use statement at top of controller
+View not found → check folder/file name matches exactly
+Route not found → run php artisan route:list
+DB connection error → check .env DB credentials
+@push not working → add @stack('scripts') to app.blade.php
